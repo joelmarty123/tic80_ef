@@ -15,114 +15,113 @@ y_r = math.random(0, 16)
 x_r_up = math.random(0, 29)
 y_r_up = math.random(0, 16)
 
-snake_body = {} 
+snake_body = {}
+num_prev_body = 0
 
-prev_num = 0
-respawn = 0
+-- variable if the snake is getting respawned or if it is new
 
-walls = {}
+respawn = 0 
 
-for i = 1, 10 do 
-	table.insert(walls, {math.random(0, 29), math.random(0, 16)})
-end
+pixel_map = {}
+tails = {}
+
+for i = 0,  29 do table.insert(pixel_map,i+1, i) end
 
 function TIC()
 
-	if btnp(0) then 
+	if btnp(S) then 
 		dir_x = 0
 		dir_y = -1
-	elseif btnp(1) then 
+	elseif btnp(W) then 
 		dir_x = 0
 		dir_y = 1
-	elseif btnp(2) then 
+	elseif btnp(A) then 
 		dir_x = -1 
 		dir_y = 0
-	elseif btnp(3) then 
+	elseif btnp(D) then 
 		dir_x = 1
 		dir_y = 0
 	end
 
-	if t%(9) == 0 then
-		x=x+dir_x
-		y=y+dir_y
-
-		for i = 2, #snake_body do
-			if x == snake_body[i][1] and y == snake_body[i][2] then
-				game_state = 0
-			end
-		end
-
-		if x > 30 or x < 0 then 
-			game_state = 0
-			
-		elseif y > 17 or y < 0 then 
-			game_state = 0
-			
-		end
-		
-		table.remove(snake_body, snake_body.length)
-		table.insert(snake_body, 1, {x, y})
-	end
-	
-	if keyp(48) then 
-		if game_state == 2 then game_state = 1
-		elseif game_state == 1 then game_state = 2
-		end
-	end
-
 	if game_state == 1 then 
-	
-		if x == x_r and y == y_r then 
-		
-			c = 0
-		
-			while c == 0 do 
+
+		if t%(9) == 0 then
+
+			-- increments of the steps
+
+			x = x+dir_x
+			y = y+dir_y
+
+			-- draw the pre hp loss elements
+
+			if num_prev_body > 0 then 
+				table.insert(snake_body, {x, y})
+				num_prev_body = num_prev_body - 1
+			end
+
+			-- checking for collision with the snake body itselfe
+
+			for i = 2, #snake_body do
+				if x == snake_body[i][1] and y == snake_body[i][2] then
+					game_state = 0
+				end
+			end
+
+			-- wall collision
+
+			if x > 30 or x < 0 then 
+				hp = hp - 1 
+				
+			elseif y > 17 or y < 0 then 
+				hp = hp - 1
+			end
 			
+			if hp == 0 then game_state = 0 end
+
+			-- movement of the snake
+
+			table.remove(snake_body, snake_body.length)
+			table.insert(snake_body, 1, {x, y})
+
+			if x == x_r and y == y_r then 
 				x_r = math.random(0, 29)
 				y_r = math.random(0, 16)
 				
-				for i = 1, #walls do
-					if (x_r * y_r - (29 - x_r%29)) == (walls[i][1] * walls[i][2] - (29 - walls[i][1]%29)) then c = 1 end
-				end
+				table.insert(snake_body, {x, y})
 				
+				score = score + 1
+				speed = speed + 1
 			end
 			
-			table.insert(snake_body, {x - dir_x, y - dir_y})
-			
-			score = score + 1
-			speed = speed + 1
+			if x == x_r_up and y == y_r_up then
+				
+				x_r_up = math.random(0, 29)
+				y_r_up = math.random(0, 16)
+				
+				hp = hp + 1
+			end
+
+			cls(7)
 		end
-		
-		if x == x_r_up and y == y_r_up then
-			
-			x_r_up = math.random(0, 29)
-			y_r_up = math.random(0, 16)
-			
-			hp = hp + 1
-			
+
+		-- pause button 
+	
+		if keyp(48) then 
+			if game_state == 2 then game_state = 1
+			elseif game_state == 1 then game_state = 2
+			end
 		end
 			
-		cls(7)
-		
-		for i, n in pairs(walls) do 
-			spr(7,8*x,8*y,0,1,0,0,1,1)
-		end
+
+		-- drawing the snake
 		
 		for i, n in pairs(snake_body) do
-		
 			if i == 1 then spr(0,8*x,8*y,0,1,0,0,1,1)
 			else spr(5, 8*n[1], 8*n[2], 0, 1, 0, 0, 1, 1)
 			end
 		end
-		
-		if respawn == 1 then 
-		
-			if prev_num > 0 then 
-				table.insert(snake_body, 1, {x, y})
-				prev_num = prev_num - 1
-			end
-		
-		end
+
+		-- printing the stats
  
 		print("Score: "..score, 95, 20)
 		print("HP: "..hp, 20, 20)
@@ -134,33 +133,18 @@ function TIC()
 	end
 		
 	if game_state == 0 then 
-		print("Game over!", 84, 84)
 		
 		if hp > 0 then 
-			x = 0
-			y = 0
-			dir_x = 1
-			dir_y = 0
-			score = #snake_body - 1
-			speed = 0
-			prev_num = #snake_body - 1
-			snake_body = {}
 			game_state = 1
-			hp = hp - 1
-			respawn = 1
-			
+			num_prev_body = #snake_body
+			RESET()
 		end
+
+		print("Game over!", 84, 84) 
 		
 		if btnp(0) then 
-			x = 0
-			y = 0
-			dir_x = 1
-			dir_y = 0
-			score = 0
-			speed = 0
-			hp = 1
-			snake_body = {}
-			game_state = 1
+			RESET() 
+			num_prev_body = #snake_body
 		end
 		
 	end
@@ -171,6 +155,27 @@ function TIC()
 	end
 	
 end
+
+function RESET() 
+	x = 0
+	y = 0
+	dir_x = 1
+	dir_y = 0
+	score = 0
+	speed = 0
+	hp = 1
+	snake_body = {}
+	game_state = 1
+end
+
+function CHECK_MOVEMENT()
+
+end
+
+function GAME_LOOP()
+
+end
+
 -- <TILES>
 -- 000:011111101cc11cc11c0110c11111111114133141111111111222222101222210
 -- 001:eccccccccc888888caaaaaaaca888888cacccccccacc0ccccacc0ccccacc0ccc
@@ -179,7 +184,7 @@ end
 -- 004:ccccceee8888cceeaaaa0cee888a0ceeccca0cccccca0c0c0cca0c0c0cca0c0c
 -- 005:0111111013131313313131311111111111111111111111111111111101111110
 -- 006:0006000000055000044444404444c444433c4444443444444443444404444440
--- 007:0edeedd0dfcdefdeeddfffdfddefcffdffeeedfdfeedcedefdfddedd0ddefff0
+-- 007:0112111015112175117111111111215127157172151211211111151201227110
 -- 016:0000020000002200000230000066660006666660065566600665566000666600
 -- 017:cacccccccaaaaaaacaaacaaacaaaaccccaaaaaaac8888888cc000cccecccccec
 -- 018:ccca00ccaaaa0ccecaaa0ceeaaaa0ceeaaaa0cee8888ccee000cceeecccceeee
