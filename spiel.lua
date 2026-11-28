@@ -17,6 +17,7 @@ y_r_up = math.random(0, 16)
 
 snake_body = {}
 num_prev_body = 0
+hp_updated = 0
 
 -- variable if the snake is getting respawned or if it is new
 
@@ -29,28 +30,16 @@ for i = 0,  29 do table.insert(pixel_map,i+1, i) end
 
 function TIC()
 
-	if btnp(S) then 
-		dir_x = 0
-		dir_y = -1
-	elseif btnp(W) then 
-		dir_x = 0
-		dir_y = 1
-	elseif btnp(A) then 
-		dir_x = -1 
-		dir_y = 0
-	elseif btnp(D) then 
-		dir_x = 1
-		dir_y = 0
-	end
-
 	if game_state == 1 then 
 
 		if t%(9) == 0 then
 
+			CHECK_MOVEMENT(dir_x, dir_y)
+
 			-- increments of the steps
 
-			x = x+dir_x
-			y = y+dir_y
+			x = x + dir_x
+			y = y + dir_y
 
 			-- draw the pre hp loss elements
 
@@ -70,10 +59,9 @@ function TIC()
 			-- wall collision
 
 			if x > 30 or x < 0 then 
-				hp = hp - 1 
-				
+				game_state = 0
 			elseif y > 17 or y < 0 then 
-				hp = hp - 1
+				game_state = 0
 			end
 			
 			if hp == 0 then game_state = 0 end
@@ -102,6 +90,22 @@ function TIC()
 			end
 
 			cls(7)
+
+			-- drawing the snake
+		
+			for i, n in pairs(snake_body) do
+				if i == 1 then spr(0,8*x,8*y,0,1,0,0,1,1)
+				else spr(5, 8*n[1], 8*n[2], 0, 1, 0, 0, 1, 1)
+				end
+			end
+
+			-- printing the stats
+
+			print("Score: "..score, 95, 20)
+			print("HP: "..hp, 20, 20)
+			spr(16, 8*x_r, 8*y_r,0, 1, 0, 0, 1, 1)
+			spr(6, 8*x_r_up, 8*y_r_up, 0, 1, 0, 0, 1, 1)
+
 		end
 
 		-- pause button 
@@ -112,22 +116,6 @@ function TIC()
 			end
 		end
 			
-
-		-- drawing the snake
-		
-		for i, n in pairs(snake_body) do
-			if i == 1 then spr(0,8*x,8*y,0,1,0,0,1,1)
-			else spr(5, 8*n[1], 8*n[2], 0, 1, 0, 0, 1, 1)
-			end
-		end
-
-		-- printing the stats
- 
-		print("Score: "..score, 95, 20)
-		print("HP: "..hp, 20, 20)
-		spr(16, 8*x_r, 8*y_r,0, 1, 0, 0, 1, 1)
-		spr(6, 8*x_r_up, 8*y_r_up, 0, 1, 0, 0, 1, 1)
-		
 		t=t+1
 		
 	end
@@ -135,9 +123,7 @@ function TIC()
 	if game_state == 0 then 
 		
 		if hp > 0 then 
-			game_state = 1
-			num_prev_body = #snake_body
-			RESET()
+			RESPAWN()
 		end
 
 		print("Game over!", 84, 84) 
@@ -168,7 +154,30 @@ function RESET()
 	game_state = 1
 end
 
-function CHECK_MOVEMENT()
+function CHECK_MOVEMENT(dir_x, dir_y)
+	if btnp(0) then 
+		dir_x = 0
+		dir_y = -1
+	elseif btnp(1) then 
+		dir_x = 0
+		dir_y = 1
+	elseif btnp(2) then 
+		dir_x = -1 
+		dir_y = 0
+	elseif btnp(3) then 
+		dir_x = 1
+		dir_y = 0
+	end
+
+	return dir_x, dir_y
+end
+
+function RESPAWN()
+	hp_prev = hp - 1
+	game_state = 1
+	num_prev_body = #snake_body
+	RESET()
+	hp = hp_prev
 
 end
 
